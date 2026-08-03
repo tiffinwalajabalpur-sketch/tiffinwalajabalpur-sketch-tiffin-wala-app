@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard – Tiffin Wala</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: { extend: { colors: {
+        'tw-green':     '#1a4731',
+        'tw-green-mid': '#2d6a4f',
+        'tw-green-lt':  '#4a9b6f',
+        'tw-orange':    '#f5840a',
+        'tw-cream':     '#fef9ef',
+        'tw-cream-dk':  '#f0e6cc',
+      }, fontFamily: { poppins: ['Poppins','sans-serif'] } } }
+    };
+  </script>
+  <style>
+    body { font-family: 'Poppins', sans-serif; background: #f8f9fb; }
+    .status-pending  { background:#fef9c3; color:#854d0e; }
+    .status-confirmed{ background:#dcfce7; color:#166534; }
+    .status-cancelled{ background:#fee2e2; color:#991b1b; }
+    .table-row:hover { background: #f0fdf4; }
+    .stat-card { transition: transform 0.2s, box-shadow 0.2s; }
+    .stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(26,71,49,0.1); }
+  </style>
+</head>
+<body>
+
+  <!-- ═══ SIDEBAR (desktop) + TOPBAR (mobile) ══════════════════ -->
+
+  <!-- Top Navbar -->
+  <nav class="bg-tw-green text-white px-5 py-3.5 flex items-center justify-between shadow-lg sticky top-0 z-30">
+    <div class="flex items-center gap-3">
+      <!-- Logo small -->
+      <div class="w-9 h-9">
+        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="100" cy="100" r="96" fill="#fef9ef"/>
+          <circle cx="80" cy="90" r="40" fill="#f5840a" opacity="0.9"/>
+          <rect x="62" y="48" width="36" height="20" rx="2" fill="#1a4731"/>
+          <rect x="59" y="67" width="42" height="5"  rx="2" fill="#1e5c3a"/>
+          <rect x="62" y="72" width="36" height="20" rx="2" fill="#1a4731"/>
+          <rect x="59" y="91" width="42" height="5"  rx="2" fill="#1e5c3a"/>
+          <rect x="62" y="96" width="36" height="18" rx="2" fill="#1a4731"/>
+          <text x="106" y="80" font-family="Arial Black,sans-serif" font-size="18" fill="#1a4731" font-weight="900">TIFFIN</text>
+          <text x="112" y="99" font-family="Arial Black,sans-serif" font-size="14" fill="#f5840a" letter-spacing="2" font-weight="900">WALA</text>
+        </svg>
+      </div>
+      <div>
+        <span class="font-black text-base leading-tight block">Tiffin Wala</span>
+        <span class="text-white/50 text-xs">Admin Dashboard</span>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <a href="/" target="_blank"
+         class="text-white/70 hover:text-white text-sm transition-colors hidden sm:block">
+        View Site ↗
+      </a>
+      <a href="/admin/logout"
+         class="bg-white/10 hover:bg-white/20 text-white text-sm font-semibold px-4 py-2 rounded-full transition-colors">
+        Logout
+      </a>
+    </div>
+  </nav>
+
+  <!-- ═══ MAIN CONTENT ══════════════════════════════════════════ -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+
+    <!-- ── Page Title ──────────────────────────────────────────── -->
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="font-black text-2xl text-tw-green">Orders Overview</h1>
+        <p class="text-gray-400 text-sm mt-0.5">Manage and confirm tiffin orders</p>
+      </div>
+      <div class="text-right">
+        <p class="text-xs text-gray-400">Last refreshed</p>
+        <p class="font-semibold text-tw-green text-sm" id="refresh-time">—</p>
+      </div>
+    </div>
+
+    <!-- ── Stats Cards ─────────────────────────────────────────── -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-7">
+
+      <div class="stat-card bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+        <p class="text-gray-400 text-xs font-medium mb-1">Total Orders</p>
+        <p class="font-black text-2xl text-tw-green">{{ stats.total }}</p>
+        <p class="text-xs text-gray-300 mt-0.5">All time</p>
+      </div>
+
+      <div class="stat-card bg-white rounded-2xl p-4 shadow-sm border border-amber-100">
+        <p class="text-gray-400 text-xs font-medium mb-1">Pending</p>
+        <p class="font-black text-2xl text-amber-600">{{ stats.pending }}</p>
+        <p class="text-xs text-amber-300 mt-0.5">Awaiting verification</p>
+      </div>
+
+      <div class="stat-card bg-white rounded-2xl p-4 shadow-sm border border-green-100">
+        <p class="text-gray-400 text-xs font-medium mb-1">Confirmed</p>
+        <p class="font-black text-2xl text-green-600">{{ stats.confirmed }}</p>
+        <p class="text-xs text-green-300 mt-0.5">Verified orders</p>
+      </div>
+
+      <div class="stat-card bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+        <p class="text-gray-400 text-xs font-medium mb-1">Today</p>
+        <p class="font-black text-2xl text-tw-green">{{ stats.today }}</p>
+        <p class="text-xs text-gray-300 mt-0.5">Orders placed today</p>
+      </div>
+
+      <div class="stat-card bg-tw-green rounded-2xl p-4 shadow-sm col-span-2 sm:col-span-1">
+        <p class="text-white/60 text-xs font-medium mb-1">Total Revenue</p>
+        <p class="font-black text-2xl text-white">&#8377;{{ "%.0f"|format(stats.revenue) }}</p>
+        <p class="text-white/40 text-xs mt-0.5">Confirmed/Delivered</p>
+      </div>
+
+      <div class="stat-card bg-tw-orange rounded-2xl p-4 shadow-sm col-span-2 sm:col-span-1">
+        <p class="text-white/80 text-xs font-medium mb-1">Today's Earnings</p>
+        <p class="font-black text-2xl text-white">&#8377;{{ "%.0f"|format(stats.today_revenue) }}</p>
+        <p class="text-white/50 text-xs mt-0.5">Earned today</p>
+      </div>
+    </div>
+
+    <!-- ── TODAY'S BOOKINGS Notification Panel ─────────────── -->
+    {% if today_orders %}
+    <div class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-tw-green/30 rounded-2xl p-5 mb-5">
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-2">
+          <div class="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse"></div>
+          <h2 class="font-black text-tw-green text-base">Today's Bookings</h2>
+          <span class="bg-tw-orange text-white text-xs font-bold px-2.5 py-0.5 rounded-full">{{ today_orders|length }}</span>
+        </div>
+        <p class="text-gray-400 text-xs">{{ today_orders|length }} order{{ 's' if today_orders|length != 1 }} placed today</p>
+      </div>
+
+      <div class="space-y-2">
+        {% for o in today_orders %}
+        <div class="bg-white rounded-xl px-4 py-3 flex items-center justify-between shadow-sm border border-gray-100 gap-3">
+          <!-- Left: customer + order info -->
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 font-black text-sm
+              {% if o.order_status == 'Confirmed' %}bg-green-100 text-green-700
+              {% elif o.order_status == 'Delivered' %}bg-blue-100 text-blue-700
+              {% elif o.order_status == 'Cancelled' %}bg-red-100 text-red-600
+              {% else %}bg-amber-100 text-amber-700{% endif %}">
+              {{ o.customer_name[0]|upper }}
+            </div>
+            <div class="min-w-0">
+              <p class="font-bold text-tw-green text-sm truncate">{{ o.customer_name }}</p>
+              <p class="text-gray-400 text-xs">
+                +91 {{ o.whatsapp_number }} &nbsp;&bull;&nbsp;
+                {% if o.thali_type == 'regular' %}Regular{% else %}Premium{% endif %} Thali &nbsp;&bull;&nbsp;
+                {% if o.meal_time == 'lunch' %}&#9728; Lunch{% else %}&#127769; Dinner{% endif %}
+              </p>
+            </div>
+          </div>
+
+          <!-- Right: amount + status + action -->
+          <div class="flex items-center gap-2 flex-shrink-0">
+            <p class="font-black text-tw-green text-base">&#8377;{{ "%.0f"|format(o.total_amount) }}</p>
+            <span class="text-xs font-bold px-2 py-0.5 rounded-full
+              {% if o.order_status == 'Confirmed' %}bg-green-100 text-green-700
+              {% elif o.order_status == 'Delivered' %}bg-blue-100 text-blue-700
+              {% elif o.order_status == 'Cancelled' %}bg-red-100 text-red-700
+              {% else %}bg-amber-100 text-amber-700{% endif %}">
+              {{ o.order_status }}
+            </span>
+            {% if o.order_status == 'Pending' %}
+            <form method="POST" action="/admin/update-status/{{ o.id }}" class="inline">
+              <input type="hidden" name="status" value="Confirmed"/>
+              <button type="submit"
+                class="bg-tw-green hover:bg-tw-green-mid text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors">
+                &#10003; Confirm
+              </button>
+            </form>
+            {% elif o.order_status == 'Confirmed' %}
+            <form method="POST" action="/admin/update-status/{{ o.id }}" class="inline">
+              <input type="hidden" name="status" value="Delivered"/>
+              <button type="submit"
+                class="bg-blue-500 hover:bg-blue-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors shadow-sm">
+                🛵 Deliver
+              </button>
+            </form>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% else %}
+    <div class="bg-gray-50 border border-gray-100 rounded-2xl p-4 mb-5 flex items-center gap-3 text-gray-400">
+      <span class="text-2xl">&#127857;</span>
+      <p class="text-sm">No orders placed today yet. Share your booking link to get started!</p>
+    </div>
+    {% endif %}
+
+
+
+    <!-- ── Search + Filter Bar ─────────────────────────────────── -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 px-4 py-3 flex flex-col sm:flex-row gap-3 mb-5">
+      <div class="flex-1 relative">
+        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+        </svg>
+        <input type="text" id="search-input" onkeyup="filterOrders()"
+          placeholder="Search by name, phone, plan..."
+          class="w-full pl-9 pr-4 py-2 text-sm border-2 border-gray-100 rounded-xl outline-none focus:border-tw-green transition-colors" />
+      </div>
+      <select id="status-filter" onchange="filterOrders()"
+        class="border-2 border-gray-100 rounded-xl px-3 py-2 text-sm font-medium text-gray-600 outline-none focus:border-tw-green">
+        <option value="">All Statuses</option>
+        <option value="Pending">⏳ Pending</option>
+        <option value="Confirmed">✅ Confirmed</option>
+        <option value="Delivered">🛵 Delivered</option>
+        <option value="Cancelled">❌ Cancelled</option>
+      </select>
+      <select id="type-filter" onchange="filterOrders()"
+        class="border-2 border-gray-100 rounded-xl px-3 py-2 text-sm font-medium text-gray-600 outline-none focus:border-tw-green">
+        <option value="">All Customer Types</option>
+        <option value="regular">Regular</option>
+        <option value="irregular">Irregular</option>
+      </select>
+    </div>
+
+    <!-- ── Orders Table ────────────────────────────────────────── -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+
+      {% if orders %}
+        <!-- Desktop Table -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm" id="orders-table">
+            <thead>
+              <tr class="bg-tw-green text-white">
+                <th class="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider">#ID</th>
+                <th class="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider">Customer</th>
+                <th class="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider">Delivery Area</th>
+                <th class="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider">Booking Dates</th>
+                <th class="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider">Order Details</th>
+                <th class="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider">Amount</th>
+                <th class="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider">Proof</th>
+                <th class="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider">Status</th>
+                <th class="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider">Action</th>
+                <th class="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider">Placed At</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50" id="table-body">
+              {% for order in orders %}
+              <tr class="table-row transition-colors"
+                  data-name="{{ order.customer_name|lower }}"
+                  data-phone="{{ order.whatsapp_number }}"
+                  data-type="{{ order.customer_type }}"
+                  data-status="{{ order.order_status }}">
+
+                <!-- ID -->
+                <td class="px-4 py-3">
+                  <span class="font-black text-tw-green">#{{ order.id }}</span>
+                </td>
+
+                <!-- Customer -->
+                <td class="px-4 py-3">
+                  <p class="font-bold text-gray-800">{{ order.customer_name }}</p>
+                  <p class="text-gray-400 text-xs">+91 {{ order.whatsapp_number }}</p>
+                  <p class="text-gray-400 text-xs max-w-xs truncate" title="{{ order.address }}">
+                    📍 {{ order.address }}
+                  </p>
+                  {% if order.map_link %}
+                  <a href="{{ order.map_link }}" target="_blank" rel="noopener"
+                     class="text-tw-orange text-xs hover:underline">🗺 Maps Link →</a>
+                  {% endif %}
+                </td>
+
+                <!-- Delivery Area -->
+                <td class="px-4 py-3">
+                  <span class="inline-block bg-blue-50 text-blue-700 text-xs font-semibold px-2 py-1 rounded-md">
+                    {{ order.delivery_area }}
+                  </span>
+                </td>
+
+                <!-- Booking Dates -->
+                <td class="px-4 py-3 text-sm text-gray-700 whitespace-pre-wrap max-w-[120px]">
+                  {{ order.booking_dates }}
+                </td>
+
+                <!-- Order Details -->
+                <td class="px-4 py-3">
+                  <div class="space-y-1">
+                    <span class="{% if order.customer_type == 'Regular' %}bg-tw-green text-white{% else %}bg-amber-100 text-amber-700{% endif %} text-xs font-bold px-2 py-0.5 rounded-full">
+                      {{ order.customer_type|title }} Customer
+                    </span>
+                    <br/>
+                    <span class="{% if order.thali_type == 'premium' %}bg-tw-orange text-white{% else %}bg-blue-50 text-blue-700{% endif %} text-xs font-semibold px-2 py-0.5 rounded-full">
+                      {{ order.thali_type|title }} Thali
+                    </span>
+                    <br/>
+                    <span class="text-gray-500 text-xs">
+                      {% if order.meal_time == 'lunch' %}☀️ Lunch (11AM–12PM){% else %}🌙 Dinner (8PM–9PM){% endif %}
+                    </span>
+                  </div>
+                </td>
+
+                <!-- Amount -->
+                <td class="px-4 py-3">
+                  <p class="font-black text-xl text-tw-green">₹{{ "%.0f"|format(order.total_amount) }}</p>
+                </td>
+
+                <!-- Payment Proof -->
+                <td class="px-4 py-3">
+                  {% if order.payment_screenshot_path %}
+                  <a href="/admin/screenshot/{{ order.payment_screenshot_path }}"
+                     target="_blank" rel="noopener"
+                     class="inline-flex items-center gap-1 bg-tw-green text-white text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-tw-green-mid transition-colors">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                    </svg>
+                    View
+                  </a>
+                  {% else %}
+                  <span class="text-gray-300 text-xs italic">Not uploaded</span>
+                  {% endif %}
+                </td>
+
+                <!-- Status Badge -->
+                <td class="px-4 py-3">
+                  <span class="status-{{ order.order_status|lower }} text-xs font-bold px-3 py-1 rounded-full">
+                    {% if order.order_status == 'Pending' %}⏳{% elif order.order_status == 'Confirmed' %}✅{% elif order.order_status == 'Delivered' %}🛵{% else %}❌{% endif %}
+                    {{ order.order_status }}
+                  </span>
+                </td>
+
+                <!-- Action -->
+                <td class="px-4 py-3">
+                  <form method="POST" action="/admin/update-status/{{ order.id }}">
+                    {% if order.order_status == 'Pending' %}
+                      <input type="hidden" name="status" value="Confirmed" />
+                      <button type="submit"
+                        class="bg-green-500 hover:bg-green-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors">
+                        ✓ Confirm
+                      </button>
+                    {% elif order.order_status == 'Confirmed' %}
+                      <div class="flex gap-2">
+                        <button type="submit" name="status" value="Delivered"
+                          class="bg-blue-500 hover:bg-blue-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors shadow-sm">
+                          🛵 Deliver
+                        </button>
+                        <button type="submit" name="status" value="Cancelled"
+                          class="bg-red-100 hover:bg-red-200 text-red-700 text-xs font-bold px-3 py-1.5 rounded-lg transition-colors">
+                          ✕ Cancel
+                        </button>
+                      </div>
+                    {% else %}
+                      <input type="hidden" name="status" value="Pending" />
+                      <button type="submit"
+                        class="bg-amber-100 hover:bg-amber-200 text-amber-700 text-xs font-bold px-3 py-1.5 rounded-lg transition-colors">
+                        ↺ Restore
+                      </button>
+                    {% endif %}
+                  </form>
+                </td>
+
+                <!-- Timestamp -->
+                <td class="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">
+                  {{ order.timestamp.strftime('%Y-%m-%d %H:%M') if order.timestamp else '—' }}
+                </td>
+
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- No results message -->
+        <div id="no-results" class="hidden text-center py-12 text-gray-400">
+          <p class="text-4xl mb-2">🔍</p>
+          <p class="font-semibold">No orders match your search.</p>
+        </div>
+
+        <!-- Table Footer -->
+        <div class="bg-tw-cream px-5 py-3 flex items-center justify-between text-xs text-gray-400 border-t border-gray-100">
+          <span>Showing <span id="visible-count">{{ orders|length }}</span> of {{ orders|length }} orders</span>
+          <span class="text-tw-green font-semibold">Tiffin Wala Admin</span>
+        </div>
+
+      {% else %}
+        <!-- Empty State -->
+        <div class="text-center py-20">
+          <div class="text-7xl mb-4">🍱</div>
+          <h3 class="font-black text-xl text-tw-green mb-2">No Orders Yet</h3>
+          <p class="text-gray-400 text-sm mb-4">When customers place orders, they'll appear here.</p>
+          <a href="/" class="bg-tw-orange text-white font-bold px-6 py-2.5 rounded-full text-sm hover:bg-orange-600 transition-colors">
+            View Landing Page →
+          </a>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Footer -->
+    <div class="text-center mt-6 text-gray-300 text-xs">
+      <p>Tiffin Wala Admin Panel • Ghar Jaisa Khana, Rozana 🍱</p>
+    </div>
+  </main>
+
+  <script>
+    // ── Set refresh time ──────────────────────────────────────
+    document.getElementById('refresh-time').textContent =
+      new Date().toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
+
+    // ── Search & Filter ───────────────────────────────────────
+    function filterOrders() {
+      const search  = document.getElementById('search-input').value.toLowerCase().trim();
+      const status  = document.getElementById('status-filter').value.toLowerCase();
+      const typeStr = document.getElementById('type-filter').value.toLowerCase();
+
+      const rows    = document.querySelectorAll('#table-body tr');
+      let   visible = 0;
+
+      rows.forEach(row => {
+        const name  = (row.dataset.name  || '').toLowerCase();
+        const phone = (row.dataset.phone || '').toLowerCase();
+        const rType = (row.dataset.type  || '').toLowerCase();
+        const rStat = (row.dataset.status|| '').toLowerCase();
+
+        const matchSearch = !search || name.includes(search) || phone.includes(search);
+        const matchStatus = !status || rStat === status;
+        const matchType   = !typeStr || rType === typeStr;
+
+        if (matchSearch && matchStatus && matchType) {
+          row.style.display = '';
+          visible++;
+        } else {
+          row.style.display = 'none';
+        }
+      });
+
+      const countEl = document.getElementById('visible-count');
+      if (countEl) countEl.textContent = visible;
+
+      const noResults = document.getElementById('no-results');
+      if (noResults) noResults.classList.toggle('hidden', visible > 0);
+    }
+
+    // ── Auto-refresh every 60 seconds ─────────────────────────
+    setTimeout(() => window.location.reload(), 60_000);
+  </script>
+</body>
+</html>
