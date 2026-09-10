@@ -16,59 +16,57 @@ from sqlalchemy import func
 import requests
 from apscheduler.schedulers.background import BackgroundScheduler
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ---------------------------------------------------------------------------
 # APP INITIALIZATION
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ---------------------------------------------------------------------------
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'tw-super-secret-key-change-in-production-2024')
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ---------------------------------------------------------------------------
 # CONFIGURATION
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-BASE_DIR    = os.path.dirname(os.path.abspath(__file__))
-UPLOAD_FOLDER     = os.path.join(BASE_DIR, 'static', 'uploads')
+# ---------------------------------------------------------------------------
+BASE_DIR      = os.path.dirname(os.path.abspath(__file__))
+UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'uploads')
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 
-# Admin credentials â€” use environment variables in production
 ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'TiffinWala@2024')
 
-# Database and Discord configuration
 DISCORD_WEBHOOK_URL = os.environ.get('DISCORD_WEBHOOK_URL', '')
-RENDER_EXTERNAL_URL = os.environ.get('RENDER_EXTERNAL_URL', '')  # Set automatically by Render
+RENDER_EXTERNAL_URL = os.environ.get('RENDER_EXTERNAL_URL', '')
 db_url = os.environ.get('DATABASE_URL', f"sqlite:///{os.path.join(BASE_DIR, 'instance', 'tiffin.db')}")
 if db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql://", 1)
 
 app.config.update(
     UPLOAD_FOLDER=UPLOAD_FOLDER,
-    MAX_CONTENT_LENGTH=5 * 1024 * 1024,   # 5 MB max upload
+    MAX_CONTENT_LENGTH=5 * 1024 * 1024,
     SQLALCHEMY_DATABASE_URI=db_url,
     SQLALCHEMY_TRACK_MODIFICATIONS=False
 )
 
 db = SQLAlchemy(app)
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ---------------------------------------------------------------------------
 # DATABASE MODELS
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ---------------------------------------------------------------------------
 
 class Order(db.Model):
     __tablename__ = 'orders'
-    id = db.Column(db.Integer, primary_key=True)
-    customer_name = db.Column(db.String(200), nullable=False)
-    whatsapp_number = db.Column(db.String(20), nullable=False)
-    address = db.Column(db.Text, nullable=False)
-    customer_type = db.Column(db.String(50), nullable=False, default='Irregular')
-    plan_type = db.Column(db.String(50))
-    thali_type = db.Column(db.String(50), nullable=False)
-    meal_time = db.Column(db.String(50), nullable=False)
-    delivery_area = db.Column(db.String(100), nullable=False, default='Not Specified')
-    booking_dates = db.Column(db.Text, nullable=False, default='Not Specified')
-    total_amount = db.Column(db.Float, nullable=False)
-    map_link = db.Column(db.String(500))
-    order_status = db.Column(db.String(50), nullable=False, default='Pending')
-    timestamp = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    id              = db.Column(db.Integer, primary_key=True)
+    customer_name   = db.Column(db.String(200), nullable=False)
+    whatsapp_number = db.Column(db.String(20),  nullable=False)
+    address         = db.Column(db.Text,         nullable=False)
+    customer_type   = db.Column(db.String(50),   nullable=False, default='Irregular')
+    plan_type       = db.Column(db.String(50))
+    thali_type      = db.Column(db.String(50),   nullable=False)
+    meal_time       = db.Column(db.String(50),   nullable=False)
+    delivery_area   = db.Column(db.String(100),  nullable=False, default='Not Specified')
+    booking_dates   = db.Column(db.Text,         nullable=False, default='Not Specified')
+    total_amount    = db.Column(db.Float,        nullable=False)
+    map_link        = db.Column(db.String(500))
+    order_status    = db.Column(db.String(50),   nullable=False, default='Pending')
+    timestamp       = db.Column(db.DateTime,     nullable=False, default=datetime.utcnow)
 
 def init_db() -> None:
     """Create the database and tables if they don't exist."""
@@ -77,25 +75,24 @@ def init_db() -> None:
     with app.app_context():
         db.create_all()
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ---------------------------------------------------------------------------
 # PRICING MATRIX & DELIVERY AREAS
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ---------------------------------------------------------------------------
 
 VALID_AREAS = [
-    'Adhartal', 'Damoh Naka', 'Napier Town', 'Wright Town', 
+    'Adhartal', 'Damoh Naka', 'Napier Town', 'Wright Town',
     'Vijay Nagar', 'Ranital', 'Sneh Nagar', 'Madan Mahal', 'Ghanta Ghar Area'
 ]
 
-VALID_PRICES: dict[tuple[str, str], int] = {
-    ('Regular',   'regular'): 80,
-    ('Regular',   'premium'): 130,
-    ('Irregular', 'regular'): 80,
-    ('Irregular', 'premium'): 130,
+# Flat price per meal regardless of customer type
+MEAL_PRICES: dict[str, int] = {
+    'regular': 79,
+    'premium': 99,
 }
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-# WHATSAPP AUTOMATION PLACEHOLDER
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ---------------------------------------------------------------------------
+# NOTIFICATIONS & KEEP-ALIVE
+# ---------------------------------------------------------------------------
 
 def log_new_booking(order_id: int, customer_name: str, phone_number: str,
                     plan: str, thali: str, meal_time: str, amount: float) -> None:
@@ -110,23 +107,26 @@ def send_discord_reminder(meal_time: str):
         return
     with app.app_context():
         today_start = datetime.combine(date.today(), datetime.min.time())
-        today_end = datetime.combine(date.today(), datetime.max.time())
+        today_end   = datetime.combine(date.today(), datetime.max.time())
         orders = Order.query.filter(
-            Order.timestamp >= today_start, 
+            Order.timestamp >= today_start,
             Order.timestamp <= today_end,
             Order.meal_time == meal_time,
             Order.order_status == 'Confirmed'
         ).all()
-        
         if orders:
-            content = f"ðŸ›µ **Delivery Reminder!**\nYou have **{len(orders)} {meal_time.title()}** orders ready for delivery right now.\nðŸ‘‰ Check your Admin Dashboard!"
+            content = (
+                f"\U0001f6f5 **Delivery Reminder!**\n"
+                f"You have **{len(orders)} {meal_time.title()}** orders ready for delivery right now.\n"
+                f"\U0001f449 Check your Admin Dashboard!"
+            )
             try:
                 requests.post(DISCORD_WEBHOOK_URL, json={"content": content})
             except Exception as e:
                 print(f"[Discord Error] {e}")
 
-# Keep-alive pinger â€” prevents Render free tier from sleeping
 def keep_alive():
+    """Ping self to prevent Render free tier from sleeping."""
     url = RENDER_EXTERNAL_URL or 'http://localhost:5000'
     try:
         requests.get(url + '/ping', timeout=10)
@@ -134,16 +134,15 @@ def keep_alive():
     except Exception as e:
         print(f"[Keep-Alive] Ping failed: {e}")
 
-# Initialize scheduler
 scheduler = BackgroundScheduler()
 scheduler.add_job(func=send_discord_reminder, args=['lunch'],  trigger="cron", hour=10, minute=0)
 scheduler.add_job(func=send_discord_reminder, args=['dinner'], trigger="cron", hour=18, minute=0)
 scheduler.add_job(func=keep_alive, trigger="interval", minutes=10)
 scheduler.start()
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ---------------------------------------------------------------------------
 # UTILITY HELPERS
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ---------------------------------------------------------------------------
 
 def allowed_file(filename: str) -> bool:
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -157,23 +156,25 @@ def admin_required(f):
     return decorated
 
 def get_order_stats() -> dict:
-    """Return aggregate stats for the admin dashboard."""
-    total = db.session.query(func.count(Order.id)).scalar() or 0
-    pending = db.session.query(func.count(Order.id)).filter(Order.order_status == 'Pending').scalar() or 0
+    total     = db.session.query(func.count(Order.id)).scalar() or 0
+    pending   = db.session.query(func.count(Order.id)).filter(Order.order_status == 'Pending').scalar() or 0
     confirmed = db.session.query(func.count(Order.id)).filter(Order.order_status.in_(['Confirmed', 'Delivered'])).scalar() or 0
-    revenue = db.session.query(func.sum(Order.total_amount)).filter(Order.order_status.in_(['Confirmed', 'Delivered'])).scalar() or 0
-    
-    today_start = datetime.combine(date.today(), datetime.min.time())
-    today_end = datetime.combine(date.today(), datetime.max.time())
-    today = db.session.query(func.count(Order.id)).filter(Order.timestamp >= today_start, Order.timestamp <= today_end).scalar() or 0
-    today_revenue = db.session.query(func.sum(Order.total_amount)).filter(Order.order_status.in_(['Confirmed', 'Delivered']), Order.timestamp >= today_start, Order.timestamp <= today_end).scalar() or 0
-    
+    revenue   = db.session.query(func.sum(Order.total_amount)).filter(Order.order_status.in_(['Confirmed', 'Delivered'])).scalar() or 0
+
+    today_start   = datetime.combine(date.today(), datetime.min.time())
+    today_end     = datetime.combine(date.today(), datetime.max.time())
+    today         = db.session.query(func.count(Order.id)).filter(Order.timestamp >= today_start, Order.timestamp <= today_end).scalar() or 0
+    today_revenue = db.session.query(func.sum(Order.total_amount)).filter(
+        Order.order_status.in_(['Confirmed', 'Delivered']),
+        Order.timestamp >= today_start, Order.timestamp <= today_end
+    ).scalar() or 0
+
     return dict(total=total, pending=pending, confirmed=confirmed,
                 revenue=revenue, today=today, today_revenue=today_revenue)
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-# ROUTES â€” PUBLIC
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ---------------------------------------------------------------------------
+# ROUTES - PUBLIC
+# ---------------------------------------------------------------------------
 
 @app.route('/')
 def index():
@@ -181,7 +182,7 @@ def index():
 
 @app.route('/ping')
 def ping():
-    """Health-check endpoint used by the keep-alive scheduler to prevent Render from sleeping."""
+    """Health-check endpoint used by the keep-alive scheduler."""
     return 'pong', 200
 
 @app.route('/submit-order', methods=['POST'])
@@ -202,31 +203,39 @@ def submit_order():
         except ValueError:
             return jsonify(success=False, message='Invalid amount.'), 400
 
+        # --- Validation ---
         errors = []
-        if not customer_name: errors.append('Full name is required.')
+        if not customer_name:
+            errors.append('Full name is required.')
         if not whatsapp_number or not whatsapp_number.isdigit() or len(whatsapp_number) != 10:
             errors.append('Valid 10-digit WhatsApp number is required.')
-        if not address: errors.append('Delivery address is required.')
-        if customer_type not in ('Regular', 'Irregular', 'A La Carte'): errors.append('Invalid customer type.')
-        if thali_type not in ('regular', 'premium', 'A La Carte'): errors.append('Invalid thali type.')
-        if meal_time not in ('lunch', 'dinner'): errors.append('Invalid meal time.')
-        if delivery_area not in VALID_AREAS: errors.append('Invalid or unsupported delivery area.')
-        if not booking_dates: errors.append('Please select at least one booking date.')
-        if errors: return jsonify(success=False, message=' '.join(errors)), 400
+        if not address:
+            errors.append('Delivery address is required.')
+        if customer_type not in ('Regular', 'Irregular'):
+            errors.append('Invalid customer type.')
+        if thali_type not in ('regular', 'premium'):
+            errors.append('Invalid meal type.')
+        if meal_time not in ('lunch', 'dinner'):
+            errors.append('Invalid meal time.')
+        if delivery_area not in VALID_AREAS:
+            errors.append('Invalid or unsupported delivery area.')
+        if not booking_dates:
+            errors.append('Please select at least one booking date.')
+        if errors:
+            return jsonify(success=False, message=' '.join(errors)), 400
 
-        # Validate price for standard meals
-        if thali_type != 'A La Carte':
-            base_price = VALID_PRICES.get((customer_type, thali_type))
-            num_dates = len([d for d in booking_dates.split(',') if d.strip()])
-            expected_price = base_price * num_dates if base_price else None
-            
-            if expected_price is None or int(total_amount) != expected_price:
-                return jsonify(
-                    success=False,
-                    message=f'Price mismatch. Expected Rs.{expected_price} for '
-                            f'{customer_type} customer with {thali_type.title()} Thali over {num_dates} days.'
-                ), 400
+        # --- Price validation ---
+        base_price = MEAL_PRICES.get(thali_type)
+        num_dates  = len([d for d in booking_dates.split(',') if d.strip()])
+        expected   = base_price * num_dates if base_price else None
 
+        if expected is None or int(total_amount) != expected:
+            return jsonify(
+                success=False,
+                message=f'Price mismatch. Expected Rs.{expected} for {num_dates} day(s).'
+            ), 400
+
+        # --- Duplicate regular trial check ---
         if customer_type == 'Regular':
             existing = Order.query.filter_by(whatsapp_number=whatsapp_number, customer_type='Regular').first()
             if existing:
@@ -251,10 +260,8 @@ def submit_order():
         db.session.commit()
         order_id = new_order.id
 
-        log_new_booking(
-            order_id, customer_name, whatsapp_number,
-            customer_type, thali_type, meal_time, total_amount
-        )
+        log_new_booking(order_id, customer_name, whatsapp_number,
+                        customer_type, thali_type, meal_time, total_amount)
 
         return jsonify(
             success=True,
@@ -266,15 +273,14 @@ def submit_order():
         print(f"[ERROR] submit_order: {exc}")
         return jsonify(success=False, message='Something went wrong. Please try again.'), 500
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-# ROUTES â€” ADMIN
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ---------------------------------------------------------------------------
+# ROUTES - ADMIN
+# ---------------------------------------------------------------------------
 
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
     if session.get('admin_logged_in'):
         return redirect(url_for('admin_dashboard'))
-
     error = None
     if request.method == 'POST':
         username = request.form.get('username', '').strip()
@@ -284,7 +290,6 @@ def admin_login():
             session.permanent = False
             return redirect(url_for('admin_dashboard'))
         error = 'Invalid credentials. Please try again.'
-
     return render_template('admin_login.html', error=error)
 
 @app.route('/admin/logout')
@@ -296,11 +301,12 @@ def admin_logout():
 @admin_required
 def admin_dashboard():
     orders = Order.query.order_by(Order.timestamp.desc()).all()
-    
-    today_start = datetime.combine(date.today(), datetime.min.time())
-    today_end = datetime.combine(date.today(), datetime.max.time())
-    today_orders = Order.query.filter(Order.timestamp >= today_start, Order.timestamp <= today_end).order_by(Order.timestamp.desc()).all()
-    
+    today_start  = datetime.combine(date.today(), datetime.min.time())
+    today_end    = datetime.combine(date.today(), datetime.max.time())
+    today_orders = Order.query.filter(
+        Order.timestamp >= today_start,
+        Order.timestamp <= today_end
+    ).order_by(Order.timestamp.desc()).all()
     stats = get_order_stats()
     return render_template('admin.html', orders=orders, stats=stats, today_orders=today_orders)
 
@@ -310,7 +316,6 @@ def update_order_status(order_id: int):
     new_status = request.form.get('status', 'Confirmed')
     if new_status not in ('Pending', 'Confirmed', 'Delivered', 'Cancelled'):
         abort(400)
-    
     order = db.session.get(Order, order_id)
     if order:
         order.order_status = new_status
@@ -322,16 +327,15 @@ def update_order_status(order_id: int):
 def serve_screenshot(filename: str):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ---------------------------------------------------------------------------
 # ENTRY POINT
-# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ---------------------------------------------------------------------------
 
 if __name__ == '__main__':
     init_db()
-    port = int(os.environ.get('PORT', 5000))
+    port  = int(os.environ.get('PORT', 5000))
     debug = os.environ.get('FLASK_DEBUG', 'true').lower() == 'true'
     print(f"\n[Tiffin Wala] Starting on http://0.0.0.0:{port}")
     print(f"[Admin] Panel: http://0.0.0.0:{port}/admin/login")
     print(f"        Username: {ADMIN_USERNAME} | Password: {ADMIN_PASSWORD}\n")
     app.run(debug=debug, host='0.0.0.0', port=port)
-
