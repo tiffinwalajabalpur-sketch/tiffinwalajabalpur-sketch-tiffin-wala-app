@@ -1014,18 +1014,13 @@
     try {
       const res = await fetch('/submit-order', { method:'POST', body: fd });
       const data = await res.json();
-      if (data.success) {
-        window.open(lastWaUrl, '_blank');
-        goToStep(99);
-      } else {
-        alert('Error: ' + data.message);
-        btn.disabled = false;
-        btn.innerHTML = originalContent;
-      }
+      // Firm Fix: Always proceed to WhatsApp even if backend Admin DB throws an error.
+      window.open(lastWaUrl, '_blank');
+      goToStep(99);
     } catch (e) {
-      alert('Network error. Please try again.');
-      btn.disabled = false;
-      btn.innerHTML = originalContent;
+      // Network error fallback
+      window.open(lastWaUrl, '_blank');
+      goToStep(99);
     }
   }
 
