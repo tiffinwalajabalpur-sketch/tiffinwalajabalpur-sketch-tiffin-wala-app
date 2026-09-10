@@ -211,10 +211,8 @@ def submit_order():
             errors.append('Valid 10-digit WhatsApp number is required.')
         if not address:
             errors.append('Delivery address is required.')
-        if customer_type not in ('Regular', 'Irregular'):
-            errors.append('Invalid customer type.')
-        if thali_type not in ('regular', 'premium'):
-            errors.append('Invalid meal type.')
+        
+        
         if meal_time not in ('lunch', 'dinner'):
             errors.append('Invalid meal time.')
         if delivery_area not in VALID_AREAS:
