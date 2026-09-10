@@ -215,8 +215,6 @@ def submit_order():
         
         if meal_time not in ('lunch', 'dinner'):
             errors.append('Invalid meal time.')
-        if delivery_area not in VALID_AREAS:
-            errors.append('Invalid or unsupported delivery area.')
         if not booking_dates:
             errors.append('Please select at least one booking date.')
         if errors:
@@ -242,8 +240,7 @@ def submit_order():
             meal_time=meal_time,
             delivery_area=delivery_area,
             booking_dates=booking_dates,
-            total_amount=total_amount,
-            map_link=map_link
+            total_amount=total_amount
         )
         db.session.add(new_order)
         db.session.commit()
@@ -260,7 +257,7 @@ def submit_order():
 
     except Exception as exc:
         print(f"[ERROR] submit_order: {exc}")
-        return jsonify(success=False, message='Something went wrong. Please try again.'), 500
+        return jsonify(success=False, message=f'Error: {str(exc)}'), 500
 
 # ---------------------------------------------------------------------------
 # ROUTES - ADMIN
