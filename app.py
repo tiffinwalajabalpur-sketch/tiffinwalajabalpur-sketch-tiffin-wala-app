@@ -222,16 +222,7 @@ def submit_order():
         if errors:
             return jsonify(success=False, message=' '.join(errors)), 400
 
-        # --- Price validation ---
-        base_price = MEAL_PRICES.get(thali_type)
-        num_dates  = len([d for d in booking_dates.split(',') if d.strip()])
-        expected   = base_price * num_dates if base_price else None
-
-        if expected is None or int(total_amount) != expected:
-            return jsonify(
-                success=False,
-                message=f'Price mismatch. Expected Rs.{expected} for {num_dates} day(s).'
-            ), 400
+        # --- Price validation removed for dynamic meals ---
 
         # --- Duplicate regular trial check ---
         if customer_type == 'Regular':
