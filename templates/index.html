@@ -11,6 +11,823 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,700;1,600&display=swap" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'tw-green':     '#1a4731',
+            'tw-green-mid': '#2d6a4f',
+            'tw-green-lt':  '#4a9b6f',
+            'tw-orange':    '#f5840a',
+            'tw-orange-lt': '#f9a348',
+            'tw-cream':     '#fef9ef',
+            'tw-cream-dk':  '#f0e6cc',
+          },
+          fontFamily: {
+            poppins:  ['Poppins','sans-serif'],
+            playfair: ['Playfair Display','serif'],
+          },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: #fef9ef;
+      color: #1a4731;
+      margin: 0; padding: 0;
+      padding-bottom: 80px;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: #fef9ef; }
+    ::-webkit-scrollbar-thumb { background: #2d6a4f; border-radius: 3px; }
+
+    /* Animations */
+    @keyframes fadeInUp  { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes floatBob  { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+    @keyframes pulseRing { 0%{transform:scale(1);opacity:.6} 100%{transform:scale(1.5);opacity:0} }
+    @keyframes waPulse   { 0%,100%{box-shadow:0 0 0 0 rgba(37,211,102,.5)} 50%{box-shadow:0 0 0 10px rgba(37,211,102,0)} }
+    @keyframes slideIn   { from{transform:translateX(30px);opacity:0} to{transform:translateX(0);opacity:1} }
+    @keyframes successPop{ 0%{transform:scale(.5);opacity:0} 70%{transform:scale(1.1)} 100%{transform:scale(1);opacity:1} }
+
+    .animate-fadeup  { animation: fadeInUp 0.65s ease both; }
+    .animate-delay-1 { animation-delay: .1s; }
+    .animate-delay-2 { animation-delay: .2s; }
+    .animate-delay-3 { animation-delay: .3s; }
+    .animate-delay-4 { animation-delay: .4s; }
+    .float-logo      { animation: floatBob 3.5s ease-in-out infinite; }
+    .wa-pulse        { animation: waPulse 2s ease-in-out infinite; }
+
+    /* Navbar */
+    .navbar-blur {
+      backdrop-filter: blur(12px);
+      background: rgba(254,249,239,.92);
+      border-bottom: 1px solid rgba(26,71,49,.12);
+    }
+
+    /* Section green */
+    .section-green { background: linear-gradient(135deg, #1a4731 0%, #2d6a4f 100%); }
+
+    /* Feature cards */
+    .feature-card { transition: transform .25s ease, box-shadow .25s ease; }
+    .feature-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(26,71,49,.12); }
+
+    /* Sticky CTA */
+    .sticky-cta {
+      position: fixed; bottom:0; left:0; right:0; z-index:40;
+      background: linear-gradient(135deg, #1a4731 0%, #2d6a4f 100%);
+      padding: 12px 16px;
+      display: flex; align-items: center; justify-content: space-between; gap:12px;
+      box-shadow: 0 -4px 24px rgba(26,71,49,.18);
+    }
+    .pulse-ring::before, .pulse-ring::after {
+      content:''; position:absolute; inset:-4px; border-radius:9999px;
+      background: rgba(245,132,10,.4); animation: pulseRing 1.8s ease-out infinite;
+    }
+    .pulse-ring::after { animation-delay:.9s; }
+
+    /* Wizard overlay */
+    #wizard-overlay { position:fixed; inset:0; z-index:50; display:none; }
+    #wizard-overlay.open { display:flex; }
+    .wizard-backdrop { position:absolute; inset:0; background:rgba(0,0,0,.55); backdrop-filter:blur(4px); }
+    .wizard-sheet {
+      position:relative; z-index:10; width:100%; max-width:480px; margin:auto;
+      max-height:94vh; overflow-y:auto; border-radius:24px 24px 0 0;
+      background:#fff; align-self:flex-end; box-shadow:0 -8px 48px rgba(0,0,0,.25);
+    }
+    @media(min-width:640px){
+      .wizard-sheet{ border-radius:20px; align-self:center; max-height:92vh; }
+    }
+
+    /* Step panels */
+    .step-panel { display:none; }
+    .step-panel.active { display:block; animation: slideIn .3s ease; }
+
+    /* Selector cards */
+    .selector-card {
+      border:2px solid #e5e7eb; border-radius:14px; padding:16px;
+      cursor:pointer; transition: all .2s ease; position:relative; overflow:hidden;
+    }
+    .selector-card:hover { border-color:#2d6a4f; background:#f0fdf4; }
+    .selector-card.selected {
+      border-color:#1a4731;
+      background: linear-gradient(135deg,#f0fdf4 0%,#dcfce7 100%);
+    }
+    .selector-card.selected::after {
+      content:'\2713'; position:absolute; top:10px; right:12px;
+      width:22px; height:22px; background:#1a4731; color:white;
+      border-radius:50%; font-size:12px; font-weight:700;
+      display:flex; align-items:center; justify-content:center;
+      line-height:22px; text-align:center;
+    }
+
+    /* Pill timing buttons */
+    .pill-btn {
+      border:2px solid #e5e7eb; border-radius:14px;
+      padding:8px 20px; font-size:.85rem; font-weight:600;
+      cursor:pointer; transition: all .18s ease; background:white;
+    }
+    .pill-btn:hover:not(.disabled-pill) { border-color:#f5840a; color:#f5840a; }
+    .pill-btn.selected-pill { border-color:#f5840a; background:#f5840a; color:white; }
+    .pill-btn.disabled-pill { opacity:.4; cursor:not-allowed; text-decoration:line-through; }
+
+    /* Inputs */
+    .tw-input {
+      width:100%; border:2px solid #e5e7eb; border-radius:10px;
+      padding:11px 14px; font-family:'Poppins',sans-serif; font-size:.92rem;
+      transition:border-color .2s; outline:none; background:white;
+    }
+    .tw-input:focus { border-color:#1a4731; }
+    .tw-input.error { border-color:#ef4444; }
+
+    /* Step dots */
+    .step-dot {
+      width:28px; height:28px; border-radius:50%;
+      display:flex; align-items:center; justify-content:center;
+      font-size:.72rem; font-weight:700; transition: all .3s ease; flex-shrink:0;
+    }
+    .step-dot.done   { background:#1a4731; color:white; }
+    .step-dot.active { background:#f5840a; color:white; box-shadow:0 0 0 4px rgba(245,132,10,.2); }
+    .step-dot.future { background:#e5e7eb; color:#9ca3af; }
+    .step-connector  { flex:1; height:2px; background:#e5e7eb; transition:background .3s; min-width:12px; }
+    .step-connector.done { background:#1a4731; }
+
+    /* WhatsApp button */
+    .btn-whatsapp {
+      background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+      color: white; font-weight:800; font-size:1rem;
+      padding:14px 24px; border-radius:14px; border:none;
+      cursor:pointer; width:100%; transition: all .2s ease;
+      display:flex; align-items:center; justify-content:center; gap:10px;
+      box-shadow: 0 4px 20px rgba(37,211,102,.35);
+    }
+    .btn-whatsapp:hover { transform:translateY(-2px); box-shadow:0 8px 28px rgba(37,211,102,.45); }
+    .btn-whatsapp:active { transform:translateY(0); }
+    .btn-whatsapp:disabled { opacity:.65; cursor:not-allowed; transform:none; }
+
+    /* WhatsApp float */
+    .whatsapp-float {
+      position:fixed; bottom:96px; right:20px; z-index:39;
+      width:52px; height:52px; border-radius:50%; background:#25D366;
+      display:flex; align-items:center; justify-content:center;
+      box-shadow:0 4px 20px rgba(37,211,102,.4); cursor:pointer; transition:transform .2s;
+    }
+    .whatsapp-float:hover { transform:scale(1.1); }
+
+    /* Message preview */
+    .message-preview {
+      background:#e8f5e9; border:1.5px solid #a5d6a7; border-radius:12px;
+      padding:14px; font-size:.82rem; line-height:1.7; color:#1b5e20;
+      font-family:monospace; white-space:pre-wrap; word-break:break-word;
+    }
+
+    /* Price badge */
+    .price-tag {
+      background: linear-gradient(135deg, #f5840a, #e07008);
+      color:white; font-weight:900; border-radius:10px;
+      padding:6px 14px; display:inline-block;
+      box-shadow: 0 3px 10px rgba(245,132,10,.3);
+    }
+    .price-tag-green {
+      background: linear-gradient(135deg, #1a4731, #2d6a4f);
+      color:white; font-weight:900; border-radius:10px;
+      padding:6px 14px; display:inline-block;
+      box-shadow: 0 3px 10px rgba(26,71,49,.2);
+    }
+
+    /* Calendar */
+    .cal-day {
+      aspect-ratio:1; border-radius:10px; border:2px solid #e5e7eb;
+      display:flex; align-items:center; justify-content:center;
+      font-size:.8rem; font-weight:600; cursor:pointer; transition:all .18s ease;
+      background:white;
+    }
+    .cal-day:hover:not(.cal-disabled) { border-color:#f5840a; color:#f5840a; }
+    .cal-day.cal-selected { background:#1a4731; color:white; border-color:#1a4731; }
+    .cal-day.cal-disabled { opacity:.3; cursor:not-allowed; }
+    .cal-day.cal-today { border-color:#f5840a; }
+
+    /* Success checkmark */
+    .success-check { animation: successPop .5s ease both; }
+  </style>
+</head>
+<body>
+
+  <!-- ══════════════════════════════════════════════════════════
+       NAVBAR
+  ══════════════════════════════════════════════════════════ -->
+  <nav class="navbar-blur sticky top-0 z-30 px-4 py-3">
+    <div class="max-w-5xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 float-logo">
+          <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="100" cy="100" r="96" fill="#fef9ef"/>
+            <circle cx="80" cy="90" r="44" fill="#f5840a" opacity="0.9"/>
+            <rect x="62" y="48" width="36" height="22" rx="2" fill="#1a4731"/>
+            <rect x="59" y="69" width="42" height="5"  rx="2" fill="#1e5c3a"/>
+            <rect x="62" y="74" width="36" height="22" rx="2" fill="#1a4731"/>
+            <rect x="59" y="95" width="42" height="5"  rx="2" fill="#1e5c3a"/>
+            <rect x="62" y="100" width="36" height="19" rx="2" fill="#1a4731"/>
+            <text x="106" y="83" font-family="Arial Black,sans-serif" font-size="20" fill="#1a4731" font-weight="900">TIFFIN</text>
+            <text x="112" y="103" font-family="Arial Black,sans-serif" font-size="16" fill="#f5840a" letter-spacing="2" font-weight="900">WALA</text>
+          </svg>
+        </div>
+        <div>
+          <p class="font-black text-tw-green text-sm leading-tight">TIFFIN WALA</p>
+          <p class="text-tw-orange text-[10px] font-bold tracking-wider">GHAR JAISA KHANA, ROZANA</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <a href="#contact"
+           class="hidden sm:flex items-center gap-2 text-tw-green font-semibold text-sm hover:text-tw-orange transition-colors">
+          <a href="tel:+919691954190" class="hidden sm:flex items-center gap-1 text-tw-green font-semibold text-sm hover:text-tw-orange transition-colors">
+            &#128222; +91 9691954190
+          </a>
+        </a>
+        <button onclick="openWizard()"
+          class="bg-[#ffb74d] text-[#1a4731] font-bold text-sm px-4 py-2 rounded-full hover:bg-orange-600 transition-colors shadow-sm">
+          Order Now
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ══════════════════════════════════════════════════════════
+       HERO
+  ══════════════════════════════════════════════════════════ -->
+  <section class="section-green text-white px-4 pt-10 pb-12 text-center relative overflow-hidden">
+    <div class="absolute inset-0 opacity-5" style="background-image:repeating-linear-gradient(0deg,transparent,transparent 40px,rgba(255,255,255,.08) 40px,rgba(255,255,255,.08) 41px),repeating-linear-gradient(90deg,transparent,transparent 40px,rgba(255,255,255,.08) 40px,rgba(255,255,255,.08) 41px);"></div>
+
+    <div class="relative max-w-xl mx-auto">
+      <div class="inline-flex items-center gap-2 bg-tw-orange/20 text-tw-orange-lt text-xs font-bold px-3 py-1.5 rounded-full mb-4 animate-fadeup">
+        &#127807; Pure Veg &nbsp;|&nbsp; Jabalpur
+      </div>
+
+      <h1 class="font-playfair text-4xl sm:text-5xl text-white drop-shadow-md mb-2 animate-fadeup animate-delay-1">
+        <span class="italic text-tw-orange-lt">Ghar Jaisa</span> Khana,<br/>Rozana Delivered.
+      </h1>
+      <p class="text-white/70 text-sm sm:text-base mb-6 animate-fadeup animate-delay-2">
+        Fresh, home-cooked tiffin delivered to your door in Jabalpur.<br/>No junk. No compromise.
+      </p>
+
+      <!-- Quick price pills -->
+      <div class="flex justify-center gap-3 max-w-sm mx-auto mb-5 animate-fadeup animate-delay-3">
+        <div class="bg-white/90 rounded-2xl p-2.5 shadow border border-gray-200 text-center w-1/2 cursor-pointer transition-transform hover:scale-105" onclick="openWizard('regular')">
+          <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-0.5">Regular Meal</p>
+          <p class="font-black text-xl text-tw-green">&#8377;79<span class="text-[10px] text-gray-400 font-normal">/meal</span></p>
+        </div>
+        <div class="bg-gradient-to-r from-tw-orange to-orange-600 rounded-2xl p-2.5 shadow text-center w-1/2 cursor-pointer transition-transform hover:scale-105" onclick="openWizard('premium')">
+          <p class="text-[10px] text-white/90 font-bold uppercase tracking-wider mb-0.5">Premium Meal</p>
+          <p class="font-black text-xl text-white">&#8377;99<span class="text-[10px] text-white/70 font-normal">/meal</span></p>
+        </div>
+      </div>
+
+      <!-- Delivery Timings -->
+      <div class="max-w-sm mx-auto mb-6 text-sm text-tw-green font-semibold bg-white/50 backdrop-blur-sm rounded-xl py-2 px-4 shadow-sm border border-white/40 animate-fadeup animate-delay-4">
+        <p>&#9728; &#127769; Dinner Delivery: 9 PM &ndash; 10 PM</p>
+      </div>
+
+      <button onclick="openWizard()"
+        class="relative inline-flex items-center gap-2 bg-tw-orange text-white font-black text-base px-8 py-4 rounded-2xl shadow-xl hover:bg-orange-500 transition-all hover:-translate-y-0.5 animate-fadeup animate-delay-4">
+        <span class="pulse-ring relative"></span>
+        &#128230; Book Your Tiffin Now
+      </button>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════
+       DELIVERY TIMINGS SECTION
+  ══════════════════════════════════════════════════════════ -->
+  <section class="px-4 py-8 max-w-2xl mx-auto text-center">
+    <h2 class="font-black text-2xl text-tw-green mb-1">Delivery <span class="text-tw-orange">Timings</span></h2>
+    <p class="text-gray-400 text-sm mb-6">Fresh food, right on time.</p>
+    <div class="max-w-md mx-auto bg-white rounded-2xl shadow p-5 border border-gray-100">
+        <div class="text-4xl mb-2">&#127769;</div>
+        <p class="font-bold text-tw-green text-base">Dinner Delivery Only</p>
+        <p class="text-tw-orange font-black text-xl">9 PM &ndash; 10 PM</p>
+    </div>
+    <div class="mt-4 bg-tw-cream border border-tw-cream-dk rounded-xl py-2.5 px-4 text-sm text-tw-green font-semibold">
+      &#128205; Delivery in Selected Areas of Jabalpur
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════
+       MENU CARDS
+  ══════════════════════════════════════════════════════════ -->
+  <section class="px-4 py-2 pb-8 max-w-2xl mx-auto">
+    <h2 class="font-black text-2xl text-tw-green text-center mb-1">Our <span class="text-tw-orange">Menu</span></h2>
+    <p class="text-gray-400 text-sm text-center mb-6">Two simple choices. Both made with love.</p>
+
+    <div class="space-y-5">
+
+      <!-- PREMIUM MEAL CARD -->
+      <div class="bg-white rounded-3xl shadow-lg overflow-hidden border-2 border-tw-orange relative">
+        <div class="absolute top-4 right-4 z-10 bg-tw-orange text-white text-[10px] font-bold px-3 py-1.5 rounded-full">
+          &#9733; OUR BEST
+        </div>
+
+        <div class="bg-gradient-to-r from-tw-orange to-orange-600 p-4">
+          <p class="text-white/80 text-xs font-bold uppercase tracking-wider">Our Best. Your Choice.</p>
+          <h3 class="font-black text-2xl text-white mt-0.5">Premium Meal</h3>
+          <p class="text-white/80 text-sm font-semibold mt-0.5">GOOD FOOD. BETTER MOOD.</p>
+        </div>
+
+        <!-- Food photo -->
+        <div class="relative">
+          <img src="{{ url_for('static', filename='images/premium_meal.jpg') }}"
+               alt="Premium Meal &ndash; Butter Roties, Sabji, Dal Tadka, Jeera Rice, Raita, Salad"
+               class="w-full h-auto block" />
+          <div class="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent"></div>
+        </div>
+
+        <!-- Items list -->
+        <div class="p-4">
+          <p class="font-bold text-tw-green text-sm mb-3 flex items-center gap-2">
+            <span class="w-1.5 h-5 bg-tw-orange rounded-full inline-block"></span>
+            Premium Includes:
+          </p>
+          <div class="space-y-2">
+            {% for icon, name, desc in [
+              ('&#129332;','5 Butter / Ghee Roties','Soft &amp; Fresh'),
+              ('&#127858;','Delicious Sabji','Fresh &amp; Tasty'),
+              ('&#129379;','Dal Tadka','Homestyle &amp; Healthy'),
+              ('&#127859;','Jeera Rice','Aromatic &amp; Flavourful'),
+              ('&#129371;','Masala Raita','Creamy &amp; Refreshing'),
+              ('&#129367;','Achar &amp; Salad','Onion, Cucumber, Tomato'),
+            ] %}
+            <div class="flex items-center gap-3 border-b border-gray-50 pb-2">
+              <span class="text-xl w-7 text-center">{{ icon|safe }}</span>
+              <div>
+                <span class="font-semibold text-tw-green text-sm">{{ name }}</span>
+                <span class="text-gray-400 text-xs ml-1">({{ desc|safe }})</span>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Price -->
+        <div class="mx-4 mb-4 bg-gradient-to-r from-tw-orange to-orange-600 rounded-2xl p-4 text-center">
+          <p class="text-white/80 text-xs font-bold uppercase tracking-wider mb-1">Fixed Price &mdash; For Everyone</p>
+          <p class="font-black text-4xl text-white">&#8377;99<span class="text-lg font-normal text-white/60">/-</span></p>
+          <p class="text-white/80 text-xs mt-1">Per Meal</p>
+        </div>
+
+        <!-- Footer -->
+        <div class="bg-tw-green px-4 py-3 flex items-center justify-between">
+          <div class="flex gap-3 text-white/80 text-xs">
+            <span>&#127807; Freshly Cooked</span>
+            <span>&#9989; Hygienic</span>
+          </div>
+          <button onclick="openWizard('premium')" class="bg-[#ffb74d] text-[#1a4731] text-xs font-bold px-4 py-2 rounded-full hover:bg-orange-500 transition-colors">
+            Order Now
+          </button>
+        </div>
+
+        <div class="bg-tw-cream px-4 py-2 text-center rounded-b-3xl">
+          <p class="text-tw-orange text-xs font-medium">&#9825; Thank you for supporting local &amp; healthy eating! &#9825;</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+      <!-- REGULAR MEAL CARD -->
+      <div class="bg-white rounded-3xl shadow-lg overflow-hidden border-2 border-tw-green relative mb-8">
+        <div class="absolute top-4 right-4 z-10 bg-tw-green text-white text-[10px] font-bold px-3 py-1.5 rounded-full">
+          &#127807; EVERYDAY VALUE
+        </div>
+
+        <div class="bg-gradient-to-r from-tw-green to-tw-green-mid p-4">
+          <p class="text-white/80 text-xs font-bold uppercase tracking-wider">Simple &amp; Wholesome</p>
+          <h3 class="font-black text-2xl text-white mt-0.5">Regular Meal</h3>
+          <p class="text-white/80 text-sm font-semibold mt-0.5">HOMELY GOODNESS.</p>
+        </div>
+
+        <!-- Food photo -->
+        <div class="relative">
+          <img src="{{ url_for('static', filename='images/regular_meal.jpg') }}"
+               alt="Regular Meal &ndash; Roties, Dal, Chaval, Seasonal Veg, Achar &amp; Salad"
+               class="w-full h-auto block" />
+          <div class="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent"></div>
+        </div>
+
+        <!-- Items list -->
+        <div class="p-4">
+          <p class="font-bold text-tw-green text-sm mb-3 flex items-center gap-2">
+            <span class="w-1.5 h-5 bg-tw-green rounded-full inline-block"></span>
+            Regular Includes:
+          </p>
+          <div class="space-y-2">
+            {% for icon, name, desc in [
+              ('&#127838;','4 Fresh Roties','Freshly made on tawa'),
+              ('&#129379;','Dal','Tadka, Palak, or Makhani'),
+              ('&#127859;','Chaval (Rice)','Fluffy, freshly cooked'),
+              ('&#127807;','Seasonal Veg','Daily-changing desi sabzi'),
+              ('&#129367;','Achar &amp; Salad','Onion, Cucumber, Tomato'),
+            ] %}
+            <div class="flex items-center gap-3 border-b border-gray-50 pb-2">
+              <span class="text-xl w-7 text-center">{{ icon|safe }}</span>
+              <div>
+                <span class="font-semibold text-tw-green text-sm">{{ name }}</span>
+                <span class="text-gray-400 text-xs ml-1">({{ desc|safe }})</span>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Price -->
+        <div class="mx-4 mb-4 bg-gradient-to-r from-tw-green to-tw-green-mid rounded-2xl p-4 text-center">
+          <p class="text-white/80 text-xs font-bold uppercase tracking-wider mb-1">Fixed Price &mdash; All Customers</p>
+          <p class="font-black text-4xl text-white">&#8377;79<span class="text-lg font-normal text-white/60">/-</span></p>
+          <p class="text-white/80 text-xs mt-1">Per Meal</p>
+        </div>
+
+        <!-- Footer -->
+        <div class="bg-tw-green-mid px-4 py-3 flex items-center justify-between">
+          <div class="flex gap-3 text-white/80 text-xs">
+            <span>&#127807; Pure Veg</span>
+            <span>&#9989; Hygienic</span>
+          </div>
+          <button onclick="openWizard('regular')" class="bg-[#ffb74d] text-[#1a4731] text-xs font-bold px-4 py-2 rounded-full hover:bg-white transition-colors">
+            Order Now
+          </button>
+        </div>
+
+        <div class="bg-tw-cream px-4 py-2 text-center rounded-b-3xl">
+          <p class="text-tw-green text-xs font-medium">&#9825; Healthy, home-style food delivered daily! &#9825;</p>
+        </div>
+      </div>
+      
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════
+       QUICK BOOKING FORM
+  ══════════════════════════════════════════════════════════ -->
+  <section class="px-4 pb-12 max-w-2xl mx-auto">
+    <div class="section-green rounded-3xl shadow-xl p-6 text-white border border-tw-green-lt/30 relative overflow-hidden">
+      <div class="absolute -top-10 -right-10 w-32 h-32 bg-white/5 rounded-full blur-2xl"></div>
+      
+      <h3 class="font-black text-2xl mb-1 text-tw-orange-lt">Quick Book</h3>
+      <p class="text-white/70 text-sm mb-5">Skip the steps. Book directly via WhatsApp.</p>
+
+      <div id="quick-book-form" class="space-y-4 relative z-10">
+        <div>
+          <label class="block text-xs font-bold text-white/80 mb-1.5">Your Name</label>
+          <input type="text" id="qb-name" placeholder="e.g. Ramesh Kumar" class="w-full border-2 border-white/20 rounded-xl px-4 py-3 bg-white/10 text-white placeholder-white/40 focus:border-tw-orange-lt outline-none transition-colors" />
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-white/80 mb-1.5">Delivery Area</label>
+          <select id="qb-area" class="w-full border-2 border-white/20 rounded-xl px-4 py-3 bg-[#23583e] text-white focus:border-tw-orange-lt outline-none transition-colors" style="color-scheme: dark;">
+            <option value="" disabled selected>Select your area...</option>
+            <option value="Adhartal">Adhartal</option>
+            <option value="Damoh Naka">Damoh Naka</option>
+            <option value="Napier Town">Napier Town</option>
+            <option value="Wright Town">Wright Town</option>
+            <option value="Vijay Nagar">Vijay Nagar</option>
+            <option value="Ranital">Ranital</option>
+            <option value="Sneh Nagar">Sneh Nagar</option>
+            <option value="Madan Mahal">Madan Mahal</option>
+            <option value="Ghanta Ghar Area">Ghanta Ghar Area</option>
+            <option value="Other">Other (Specify on WhatsApp)</option>
+          </select>
+        </div>
+
+        <div class="pt-2">
+          <p class="text-sm font-bold mb-3 text-center text-white/90">Do you want to book now?</p>
+          <div class="flex gap-3">
+            <button onclick="handleQuickBookYes()" class="flex-1 bg-[#ffb74d] text-[#1a4731] font-black py-3.5 rounded-xl hover:bg-white transition-colors shadow-lg text-sm">
+              YES, BOOK NOW
+            </button>
+            <button onclick="handleQuickBookNo()" class="flex-1 bg-white/10 text-white font-bold py-3.5 rounded-xl hover:bg-white/20 transition-colors border border-white/20 text-sm">
+              NO, LATER
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Feedback Prompts (Hidden) -->
+      <div id="quick-book-feedback" class="hidden animate-fadeup relative z-10">
+        <p class="font-bold text-tw-orange-lt mb-4 text-center">We'd love to know why! <span class="text-white/60 text-xs font-normal block mt-1">Your feedback helps us improve.</span></p>
+        <div class="space-y-3">
+          <button onclick="sendFeedback('price')" class="w-full bg-white/5 hover:bg-white/15 text-white text-sm font-semibold py-3.5 px-4 rounded-xl border border-white/20 transition-colors text-left flex justify-between items-center">
+            <span>&#128184; The price is a bit high for me.</span> <span class="text-white/40">&rarr;</span>
+          </button>
+          <button onclick="sendFeedback('timing')" class="w-full bg-white/5 hover:bg-white/15 text-white text-sm font-semibold py-3.5 px-4 rounded-xl border border-white/20 transition-colors text-left flex justify-between items-center">
+            <span>&#9200; The delivery timings don't work.</span> <span class="text-white/40">&rarr;</span>
+          </button>
+          <button onclick="sendFeedback('browsing')" class="w-full bg-white/5 hover:bg-white/15 text-white text-sm font-semibold py-3.5 px-4 rounded-xl border border-white/20 transition-colors text-left flex justify-between items-center">
+            <span>&#128064; I'm just exploring right now.</span> <span class="text-white/40">&rarr;</span>
+          </button>
+        </div>
+      </div>
+
+      <div id="quick-book-thanks" class="hidden animate-fadeup text-center py-6 relative z-10">
+        <div class="text-4xl mb-3">&#128591;</div>
+        <p class="font-bold text-lg text-[#ffb74d]">Thank you for your feedback!</p>
+        <p class="text-sm text-white/70 mt-1">We hope to serve you in the future.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════
+       TERMS & CONDITIONS
+  ══════════════════════════════════════════════════════════ -->
+  <section class="px-4 py-8 max-w-2xl mx-auto">
+    <h2 class="font-black text-xl text-tw-green text-center mb-4">Terms &amp; Conditions</h2>
+    <div class="grid grid-cols-2 gap-3">
+      {% for item in [
+        'Advance booking &amp; payment required.',
+        'Meal once booked cannot be cancelled or refunded.',
+        'Timings may vary slightly based on location.',
+        'Quality &amp; taste depend on timely delivery.',
+      ] %}
+      <div class="bg-white rounded-xl p-3.5 shadow-sm border border-gray-100 flex items-start gap-2">
+        <span class="text-tw-orange font-black mt-0.5">&#9670;</span>
+        <p class="text-xs text-gray-600 font-medium">{{ item|safe }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════
+       FEATURES
+  ══════════════════════════════════════════════════════════ -->
+  <section class="section-green px-4 py-10">
+    <div class="max-w-2xl mx-auto text-center mb-6">
+      <h2 class="font-black text-2xl text-white">Why Choose <span class="text-tw-orange-lt">Tiffin Wala?</span></h2>
+    </div>
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-2xl mx-auto">
+      {% for icon, title, desc in [
+        ('&#127807;','Pure Veg','No non-veg. Ever.'),
+        ('&#9200;','On Time','Delivered at your door'),
+        ('&#127968;','Home Style','Just like maa ke haath ka khana'),
+        ('&#128154;','Hygienic','Clean &amp; safe kitchen'),
+      ] %}
+      <div class="feature-card bg-white/10 rounded-2xl p-4 text-center text-white">
+        <div class="text-3xl mb-2">{{ icon|safe }}</div>
+        <p class="font-bold text-sm">{{ title }}</p>
+        <p class="text-white/60 text-xs mt-0.5">{{ desc|safe }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════
+       FOOTER / CONTACT
+  ══════════════════════════════════════════════════════════ -->
+  <footer id="contact" class="bg-tw-green text-white px-4 py-8">
+    <div class="max-w-xl mx-auto">
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-6 mb-6 pb-6 border-b border-white/15">
+        <div class="flex items-center gap-3">
+          <div class="w-14 h-14">
+            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="100" cy="100" r="96" fill="#fef9ef"/>
+              <circle cx="80" cy="90" r="44" fill="#f5840a" opacity="0.9"/>
+              <rect x="62" y="48" width="36" height="22" rx="2" fill="#1a4731"/>
+              <rect x="59" y="69" width="42" height="5"  rx="2" fill="#1e5c3a"/>
+              <rect x="62" y="74" width="36" height="22" rx="2" fill="#1a4731"/>
+              <text x="106" y="83" font-family="Arial Black,sans-serif" font-size="20" fill="#1a4731" font-weight="900">TIFFIN</text>
+              <text x="112" y="103" font-family="Arial Black,sans-serif" font-size="16" fill="#f5840a" letter-spacing="2" font-weight="900">WALA</text>
+            </svg>
+          </div>
+          <div>
+            <p class="font-black text-lg">TIFFIN WALA</p>
+            <p class="text-white/60 text-xs">GHAR JAISA KHANA, ROZANA</p>
+            <p class="text-tw-orange-lt text-xs mt-0.5">&#128205; Jabalpur</p>
+          </div>
+        </div>
+        <div class="text-center sm:text-right">
+          <p class="text-tw-orange font-bold text-sm mb-2">BOOK ON WHATSAPP</p>
+          <a href="https://wa.me/919691954190?text=Hi%20Tiffin%20Wala!%20I%20want%20to%20book%20a%20tiffin."
+             target="_blank" rel="noopener"
+             class="flex items-center justify-center sm:justify-end gap-2 group">
+            <svg class="w-7 h-7 flex-shrink-0" viewBox="0 0 24 24" fill="#25D366">
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+            </svg>
+            <a href="tel:+919691954190" class="font-black text-xl group-hover:text-tw-orange transition-colors">+91 9691954190</a>
+          </a>
+        </div>
+      </div>
+      <div class="text-center">
+        <p class="text-white/50 text-xs">
+          &copy; 2024 Tiffin Wala, Jabalpur. All rights reserved. &nbsp;|&nbsp;
+          <a href="/admin/login" class="hover:text-white/80 transition-colors">Admin</a>
+        </p>
+        <p class="text-tw-orange text-xs mt-1 font-semibold tracking-widest">GHAR JAISA KHANA, ROZANA</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ══════════════════════════════════════════════════════════
+       STICKY CTA BAR
+  ══════════════════════════════════════════════════════════ -->
+  <div class="sticky-cta">
+    <div>
+      <p class="text-white font-bold text-sm">Ready to order?</p>
+      <p class="text-white/60 text-xs">Regular &#8377;79 &nbsp;|&nbsp; Premium &#8377;99</p>
+    </div>
+    <button onclick="openWizard()"
+      class="bg-[#ffb74d] text-[#1a4731] font-black text-sm px-6 py-3 rounded-xl hover:bg-orange-500 transition-colors shadow-lg">
+      Book Now
+    </button>
+  </div>
+
+  <!-- WhatsApp float -->
+  <a href="https://wa.me/919691954190?text=Hi%20Tiffin%20Wala!%20I%20want%20to%20book%20a%20tiffin."
+     target="_blank" rel="noopener" class="whatsapp-float wa-pulse" title="Chat on WhatsApp">
+    <svg viewBox="0 0 24 24" fill="white" class="w-6 h-6">
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+    </svg>
+  </a>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       BOOKING WIZARD OVERLAY
+  ══════════════════════════════════════════════════════════ -->
+  <div id="wizard-overlay" role="dialog" aria-modal="true" aria-label="Book your tiffin">
+    <div class="wizard-backdrop" onclick="closeWizard()"></div>
+
+    <div class="wizard-sheet" id="wizard-sheet">
+
+      <!-- Header -->
+      <div class="section-green p-4 flex items-center justify-between sticky top-0 z-20">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 flex-shrink-0">
+            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="100" cy="100" r="96" fill="#fef9ef"/>
+              <circle cx="80" cy="90" r="44" fill="#f5840a" opacity="0.9"/>
+              <rect x="62" y="48" width="36" height="22" rx="2" fill="#1a4731"/>
+              <rect x="59" y="69" width="42" height="5"  rx="2" fill="#1e5c3a"/>
+              <rect x="62" y="74" width="36" height="22" rx="2" fill="#1a4731"/>
+            </svg>
+          </div>
+          <div>
+            <p class="text-white font-bold text-sm">Book Your Tiffin</p>
+            <p class="text-white/60 text-xs">Step <span id="step-label">1</span> of 2</p>
+          </div>
+        </div>
+        <button onclick="closeWizard()"
+          class="text-white/60 hover:text-white p-2 rounded-full hover:bg-white/10 transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Progress bar -->
+      <div class="h-1.5 bg-gray-100">
+        <div id="wizard-progress" class="h-full bg-[#ffb74d] transition-all duration-500" style="width:50%"></div>
+      </div>
+
+      <!-- ── STEP 1: Build Order & Details ────────────────────────────── -->
+      <div id="step-1" class="step-panel active p-5">
+        <h2 class="font-black text-tw-green text-lg mb-1">Your Order</h2>
+        <p class="text-gray-400 text-sm mb-4">Select quantities and enter your details for today's dinner.</p>
+
+        <!-- Quantity Selectors -->
+        <div class="space-y-3 mb-6">
+          <div class="bg-gray-50 rounded-xl p-3 flex items-center justify-between border border-gray-200">
+            <div>
+              <p class="font-bold text-tw-green text-sm">Premium Meal (&#8377;99)</p>
+            </div>
+            <div class="flex items-center gap-3">
+              <button onclick="updateQty('premium', -1)" class="w-8 h-8 rounded-full bg-white border border-gray-300 text-gray-600 font-bold hover:bg-gray-100 flex items-center justify-center">-</button>
+              <span id="qty-premium" class="font-black text-tw-green w-4 text-center">0</span>
+              <button onclick="updateQty('premium', 1)" class="w-8 h-8 rounded-full bg-[#ffb74d] text-tw-green font-bold hover:bg-[#ffaa2b] flex items-center justify-center">+</button>
+            </div>
+          </div>
+
+          <div class="bg-gray-50 rounded-xl p-3 flex items-center justify-between border border-gray-200">
+            <div>
+              <p class="font-bold text-tw-green text-sm">Regular Meal (&#8377;79)</p>
+            </div>
+            <div class="flex items-center gap-3">
+              <button onclick="updateQty('regular', -1)" class="w-8 h-8 rounded-full bg-white border border-gray-300 text-gray-600 font-bold hover:bg-gray-100 flex items-center justify-center">-</button>
+              <span id="qty-regular" class="font-black text-tw-green w-4 text-center">0</span>
+              <button onclick="updateQty('regular', 1)" class="w-8 h-8 rounded-full bg-[#ffb74d] text-tw-green font-bold hover:bg-[#ffaa2b] flex items-center justify-center">+</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Form Details -->
+        <div class="space-y-4">
+          <div>
+            <label class="block text-xs font-bold text-tw-green mb-1.5">Full Name *</label>
+            <input id="wiz_name" type="text" placeholder="e.g. Ramesh Kumar" class="tw-input" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-tw-green mb-1.5">WhatsApp Number *</label>
+            <div class="flex">
+              <span class="flex-shrink-0 bg-gray-50 border-2 border-r-0 border-gray-200 rounded-l-[10px] px-3 flex items-center text-gray-500 text-sm font-semibold">+91</span>
+              <input id="wiz_phone" type="tel" maxlength="10" placeholder="10-digit mobile number" class="tw-input rounded-l-none border-l-0" style="border-top-left-radius:0;border-bottom-left-radius:0;" />
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-tw-green mb-1.5">Delivery Area *</label>
+            <select id="wiz_area" class="tw-input bg-white appearance-none">
+              <option value="" disabled selected>Select your area...</option>
+              <option value="Adhartal">Adhartal</option>
+              <option value="Damoh Naka">Damoh Naka</option>
+              <option value="Napier Town">Napier Town</option>
+              <option value="Wright Town">Wright Town</option>
+              <option value="Vijay Nagar">Vijay Nagar</option>
+              <option value="Ranital">Ranital</option>
+              <option value="Sneh Nagar">Sneh Nagar</option>
+              <option value="Madan Mahal">Madan Mahal</option>
+              <option value="Ghanta Ghar Area">Ghanta Ghar Area</option>
+              <option value="Other">Other (Specify on WhatsApp)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-tw-green mb-1.5">Full Address *</label>
+            <textarea id="wiz_address" rows="2" placeholder="House no, street, landmark..." class="tw-input resize-none"></textarea>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-tw-green mb-1.5">Google Maps Link <span class="text-gray-400 font-normal">(optional)</span></label>
+            <input id="wiz_map" type="url" placeholder="https://maps.google.com/..." class="tw-input" />
+          </div>
+        </div>
+
+        <div id="wiz-errors" class="mt-3 text-xs text-red-600 hidden bg-red-50 p-2 rounded border border-red-100"></div>
+
+        <button onclick="validateAndReview()"
+          class="mt-5 w-full bg-[#ffb74d] text-[#1a4731] font-black py-4 rounded-xl hover:bg-[#f3ad43] transition-colors shadow-md">
+          Review Your Order &rarr;
+        </button>
+      </div>
+
+      <!-- ── STEP 2: Review + Submit ──────────────────────────── -->
+      <div id="step-2" class="step-panel p-5 hidden">
+        <h2 class="font-black text-tw-green text-lg mb-1">Review Your Order</h2>
+        <p class="text-gray-400 text-sm mb-4">Please check your details before confirming.</p>
+
+        <!-- Summary card -->
+        <div class="bg-tw-cream rounded-2xl p-4 mb-4 space-y-2 border border-tw-cream-dk">
+          <div class="flex justify-between text-sm">
+            <span class="text-gray-500 font-medium">Customer</span>
+            <span id="rev-name" class="font-bold text-tw-green"></span>
+          </div>
+          <div class="flex justify-between text-sm">
+            <span class="text-gray-500 font-medium">WhatsApp</span>
+            <span id="rev-phone" class="font-bold"></span>
+          </div>
+          <div class="flex justify-between text-sm">
+            <span class="text-gray-500 font-medium">Area</span>
+            <span id="rev-area" class="font-bold text-tw-green"></span>
+          </div>
+          <div class="border-t border-tw-cream-dk pt-2 mt-2">
+            <span class="text-gray-500 text-sm font-medium block mb-1">Meals Selected:</span>
+            <span id="rev-meals" class="font-bold text-tw-orange text-sm block"></span>
+          </div>
+          <div class="border-t border-tw-cream-dk pt-2 mt-2 flex justify-between">
+            <span class="font-black text-tw-green">Total Amount</span>
+            <span id="rev-total" class="font-black text-xl text-tw-orange"></span>
+          </div>
+        </div>
+
+        <!-- WhatsApp message preview -->
+        <p class="text-xs font-bold text-gray-500 mb-2">&#128172; We will send this to WhatsApp:</p>
+        <div id="wa-message-preview" class="message-preview mb-5 text-xs"></div>
+
+        <button id="submit-btn" onclick="submitOrderFinal()" class="w-full bg-[#25D366] text-white font-black py-4 rounded-xl hover:bg-[#128C7E] transition-colors shadow-lg flex items-center justify-center gap-2">
+          <svg viewBox="0 0 24 24" fill="white" class="w-6 h-6 flex-shrink-0">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+          </svg>
+          I want to confirm my booking on Whatsapp
+        </button>
+
+        <button onclick="goToStep(1)" class="mt-3 text-gray-400 hover:text-tw-green text-sm font-semibold flex items-center justify-center gap-1 transition-colors w-full">
+          &larr; Back to edit details
+        </button>
+      </div>
+
+      <!-- ── SUCCESS ────────────────────────────────────────────── -->
+      <div id="step-success" class="step-panel p-8 text-center hidden">
+        <div class="success-check text-7xl mb-4">&#127834;</div>
+        <h2 class="font-black text-tw-green text-2xl mb-2">Order Sent!</h2>
+        <p class="text-gray-500 text-sm mb-6">Complete the payment on WhatsApp to confirm.</p>
+        <button onclick="closeWizard()"
+          class="bg-tw-orange text-white font-black px-8 py-3 rounded-2xl hover:bg-orange-500 transition-colors">
+          Done
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       JAVASCRIPT
+  ══════════════════════════════════════════════════════════ -->
+<script>
   // ── Constants ────────────────────────────────────────────
   const OWNER_PHONE = '919691954190';
 
@@ -28,15 +845,10 @@
 
   let lastWaUrl = '';
 
-  // ── Wizard open/close & Time check ────────────────────────
+  // ── Wizard open/close ────────────────────────
   function openWizard(presetType = null) {
-    // Check if it's past 8 PM (20:00)
-    
-    
     document.getElementById('wizard-overlay').classList.add('open');
     document.body.style.overflow = 'hidden';
-
-    
 
     // Reset fields if opening fresh
     if (presetType === 'premium' && state.qtyPremium === 0) {
@@ -59,18 +871,22 @@
   // ── Step navigation ───────────────────────────────────────
   function goToStep(n) {
     state.step = n;
-    document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active', 'hidden'));
+    document.querySelectorAll('.step-panel').forEach(p => p.classList.add('hidden'));
 
     if (n === 1) {
+      document.getElementById('step-1').classList.remove('hidden');
       document.getElementById('step-1').classList.add('active');
       document.getElementById('wizard-progress').style.width = '50%';
       document.getElementById('step-label').textContent = '1';
     } else if (n === 2) {
+      document.getElementById('step-2').classList.remove('hidden');
       document.getElementById('step-2').classList.add('active');
       document.getElementById('wizard-progress').style.width = '100%';
       document.getElementById('step-label').textContent = '2';
       buildReview();
     } else if (n === 99) {
+      document.getElementById('step-success').classList.remove('hidden');
       document.getElementById('step-success').classList.add('active');
     }
 
@@ -153,28 +969,17 @@
     const plainMealString = mealTexts.join(' & ');
 
     const message = (
-      `🍱 *NEW DINNER BOOKING*
-` +
-      `————————————
-` +
-      `👤 *Name:* ${state.name}
-` +
-      `📱 *WhatsApp:* +91 ${state.phone}
-` +
-      `📍 *Area:* ${state.area}
-` +
-      `🏠 *Address:* ${state.address}
-` +
-      (state.mapLink ? `🗺️ *Map:* ${state.mapLink}
-` : ``) +
-      `————————————
-` +
-      `🍽️ *Meals:* ${plainMealString}
-` +
-      `💰 *Total:* ₹${total}
-` +
-      `————————————
-` +
+      `🍱 *NEW DINNER BOOKING*\n` +
+      `————————————\n` +
+      `👤 *Name:* ${state.name}\n` +
+      `📱 *WhatsApp:* +91 ${state.phone}\n` +
+      `📍 *Area:* ${state.area}\n` +
+      `🏠 *Address:* ${state.address}\n` +
+      (state.mapLink ? `🗺️ *Map:* ${state.mapLink}\n` : ``) +
+      `————————————\n` +
+      `🍽️ *Meals:* ${plainMealString}\n` +
+      `💰 *Total:* ₹${total}\n` +
+      `————————————\n` +
       `Booking for: ${today} (Dinner)`
     );
 
@@ -250,5 +1055,6 @@
     if (e.key === 'Escape') closeWizard();
   });
 </script>
+
 </body>
 </html>
