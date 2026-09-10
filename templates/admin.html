@@ -290,7 +290,7 @@
                     </span>
                     <br/>
                     <span class="{% if order.thali_type == 'premium' %}bg-tw-orange text-white{% else %}bg-blue-50 text-blue-700{% endif %} text-xs font-semibold px-2 py-0.5 rounded-full">
-                      {{ order.thali_type|title }} Thali
+                      {% if order.thali_type == 'premium' %}Premium Meal (&#8377;99){% else %}Regular Meal (&#8377;79){% endif %}
                     </span>
                     <br/>
                     <span class="text-gray-500 text-xs">
